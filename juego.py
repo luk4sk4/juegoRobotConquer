@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 CYBER DRONE: OVERDRIVE - 8-BIT RETRO AERIAL EDITION
-Eres un pequeño robot flotante morado que combate en el aire.
+You are a small purple floating drone battling in the skies.
 """
 
 import sys
@@ -17,8 +17,8 @@ if not os.path.exists("assets_cache") or len(os.listdir("assets_cache")) < 20:
     extract_assets.extract_all()
 
 # --- CONSTANTES DE CONFIGURACIÓN ---
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 720
+SCREEN_WIDTH = 1920
+SCREEN_HEIGHT = 1080
 FPS = 60
 TITLE = "CYBER DRONE: OVERDRIVE [AERIAL ARCADE]"
 
@@ -42,13 +42,13 @@ DIFFICULTIES = [
     "HARD",
     "IMPOSSIBLE",
     "REALLY REALLY IMPOSSIBLE",
-    "NOW IMPOSSIBLE FOR REAL",
+    "DARK SOULS DIFFICULTY",
 ]
 
 DIFFICULTY_SETTINGS = {
     "VERY EASY": {
         "name": "VERY EASY",
-        "description": "Estado base: ritmo pausado, tiros lentos y enemigos estándar.",
+        "description": "Base state: relaxed pacing, slow bullets and standard enemies.",
         "color": (0, 240, 255),
         "hp_mult": 1.00,             # Salud enemigos y boss
         "move_speed_mult": 1.00,     # Velocidad de movimiento
@@ -59,7 +59,7 @@ DIFFICULTY_SETTINGS = {
     },
     "EASY": {
         "name": "EASY",
-        "description": "Desafío ligero: enemigos +20% veloces y resistentes.",
+        "description": "Light challenge: enemies are +20% faster and tougher.",
         "color": (60, 255, 120),
         "hp_mult": 1.25,
         "move_speed_mult": 1.20,
@@ -70,7 +70,7 @@ DIFFICULTY_SETTINGS = {
     },
     "MEDIUM": {
         "name": "MEDIUM",
-        "description": "Arcade balanceado: mayor cadencia de disparo y patrullas ágiles.",
+        "description": "Balanced arcade: higher fire rate and agile patrols.",
         "color": (255, 215, 0),
         "hp_mult": 1.60,
         "move_speed_mult": 1.45,
@@ -81,7 +81,7 @@ DIFFICULTY_SETTINGS = {
     },
     "HARD": {
         "name": "HARD",
-        "description": "Intensidad alta: ráfagas constantes, disparos veloces y mayor daño.",
+        "description": "High intensity: constant bursts, faster shots and heavier damage.",
         "color": (255, 130, 20),
         "hp_mult": 2.10,
         "move_speed_mult": 1.75,
@@ -92,7 +92,7 @@ DIFFICULTY_SETTINGS = {
     },
     "IMPOSSIBLE": {
         "name": "IMPOSSIBLE",
-        "description": "Lluvia de balas: proyectiles feroces y enemigos con gran blindaje.",
+        "description": "Bullet storm: ferocious projectiles and heavily armored foes.",
         "color": (255, 45, 65),
         "hp_mult": 2.80,
         "move_speed_mult": 2.10,
@@ -103,7 +103,7 @@ DIFFICULTY_SETTINGS = {
     },
     "REALLY REALLY IMPOSSIBLE": {
         "name": "REALLY REALLY IMPOSSIBLE",
-        "description": "Caos extremo: proyectiles ultrarrápidos, alta salud y daño mortal.",
+        "description": "Extreme chaos: ultra-fast projectiles, massive health and lethal damage.",
         "color": (215, 60, 255),
         "hp_mult": 3.60,
         "move_speed_mult": 2.50,
@@ -112,9 +112,9 @@ DIFFICULTY_SETTINGS = {
         "damage_mult": 2.50,
         "score_mult": 4.50,
     },
-    "NOW IMPOSSIBLE FOR REAL": {
-        "name": "NOW IMPOSSIBLE FOR REAL",
-        "description": "¡PESADILLA ABSOLUTA! Reacciones milimétricas o muerte instantánea.",
+    "DARK SOULS DIFFICULTY": {
+        "name": "DARK SOULS DIFFICULTY",
+        "description": "ABSOLUTE NIGHTMARE! Split-second reactions or instant destruction.",
         "color": (255, 0, 80),
         "hp_mult": 4.80,
         "move_speed_mult": 3.00,
@@ -415,13 +415,14 @@ class Projectile:
         self.alive = True
         self.radius = 8
         self.homing_target = None
-        self.lifetime = 190
+        self.lifetime = 190 if self.is_player else -1
         self.hit_entities = set()
 
     def update(self):
-        self.lifetime -= 1
-        if self.lifetime <= 0:
-            self.alive = False
+        if self.lifetime > 0:
+            self.lifetime -= 1
+            if self.lifetime <= 0:
+                self.alive = False
 
         if self.kind == "missile" and self.homing_target and getattr(self.homing_target, 'alive', False):
             # Guiado suave y pausado para permitir esquivar
@@ -609,7 +610,7 @@ class AerialEnemy:
             self.width, self.height = 68, 98
             self.shoot_cooldown = 120
             self.is_boss = True
-            self.boss_name = "COMANDANTE MAYOR KIRA"
+            self.boss_name = "MAJOR COMMANDER KIRA"
 
         elif enemy_type == "heavy_brute":  # Mini-Boss Nivel 7
             self.max_hp = 2400
@@ -620,7 +621,7 @@ class AerialEnemy:
             self.width, self.height = 105, 125
             self.shoot_cooldown = 110
             self.is_boss = True
-            self.boss_name = "MECHA SUPREMO TITAN PRIME"
+            self.boss_name = "SUPREME MECHA TITAN PRIME"
 
         # Escalar salud con la etapa y con la dificultad seleccionada
         hp_mult = (1.0 + (stage - 1) * 0.14) * self.diff_cfg["hp_mult"]
@@ -1363,11 +1364,11 @@ class CyberDroneGame:
 
     def get_pause_options(self):
         return [
-            "CONTINUAR MISIÓN",
-            f"DIFICULTAD: < {self.current_difficulty} >",
-            "REINICIAR SECTOR",
-            "MENÚ PRINCIPAL",
-            "SALIR"
+            "CONTINUE MISSION",
+            f"DIFFICULTY: < {self.current_difficulty} >",
+            "RESTART SECTOR",
+            "MAIN MENU",
+            "QUIT"
         ]
 
     def _create_scanlines(self):
@@ -1474,10 +1475,11 @@ class CyberDroneGame:
                     if self.state == "WELCOME":
                         mx, my = event.pos
                         # Clic en flechas del selector o en la tarjeta
-                        left_arrow = pygame.Rect(SCREEN_WIDTH // 2 - 330, 465, 56, 46)
-                        right_arrow = pygame.Rect(SCREEN_WIDTH // 2 + 274, 465, 56, 46)
-                        diff_card = pygame.Rect(SCREEN_WIDTH // 2 - 270, 465, 540, 46)
-                        start_btn = pygame.Rect(SCREEN_WIDTH // 2 - 270, 615, 540, 50)
+                        diff_box_y = int(SCREEN_HEIGHT * 0.65)
+                        left_arrow = pygame.Rect(SCREEN_WIDTH // 2 - 320 + 12, diff_box_y + 10, 44, 32)
+                        right_arrow = pygame.Rect(SCREEN_WIDTH // 2 + 320 - 56, diff_box_y + 10, 44, 32)
+                        diff_card = pygame.Rect(SCREEN_WIDTH // 2 - 260, diff_box_y, 520, 48)
+                        start_btn = pygame.Rect(SCREEN_WIDTH // 2 - 260, diff_box_y + 130 + 25, 520, 50)
 
                         if left_arrow.collidepoint(mx, my):
                             self.change_difficulty(-1)
@@ -1496,7 +1498,7 @@ class CyberDroneGame:
                         mx, my = event.pos
                         opts = self.get_pause_options()
                         for idx in range(len(opts)):
-                            rect = pygame.Rect(SCREEN_WIDTH // 2 - 200, 260 + idx * 52, 400, 44)
+                            rect = pygame.Rect(SCREEN_WIDTH // 2 - 310, (SCREEN_HEIGHT - 420) // 2 + 84 + idx * 52 - 6, 620, 44)
                             if rect.collidepoint(mx, my):
                                 self.pause_selected = idx
                                 self.audio.play('menu_select')
@@ -1884,7 +1886,7 @@ class CyberDroneGame:
         hp_col = COLOR_GREEN if hp_pct > 0.4 else COLOR_RED
         pygame.draw.rect(self.screen, hp_col, (bar_x, bar_y, int(220 * hp_pct), 18), border_radius=4)
         pygame.draw.rect(self.screen, COLOR_WHITE, (bar_x, bar_y, 220, 18), 2, border_radius=4)
-        hp_txt = self.font_small.render(f"VIDA: {int(self.player.hp)}/{self.player.max_hp}", True, COLOR_WHITE)
+        hp_txt = self.font_small.render(f"HP: {int(self.player.hp)}/{self.player.max_hp}", True, COLOR_WHITE)
         self.screen.blit(hp_txt, (bar_x + 8, bar_y + 1))
 
         # 2. BARRA DE ENERGÍA (Para el Super-Disparo [E] y Dash)
@@ -1895,12 +1897,12 @@ class CyberDroneGame:
         
         if self.player.charge_timer > 0:
             ch_pct = int((self.player.charge_timer / float(self.player.charge_max)) * 100)
-            en_status = f"CARGANDO {ch_pct}% [E]"
+            en_status = f"CHARGING {ch_pct}% [E]"
         elif self.player.energy >= 45.0:
             en_status = f"{int(self.player.energy)}% [MANTÉN E 1s]"
         else:
-            en_status = f"{int(self.player.energy)}% (BOTE AZUL)"
-        en_txt = self.font_small.render(f"ENERGIA: {en_status}", True, COLOR_WHITE)
+            en_status = f"{int(self.player.energy)}% (BLUE CANISTER)"
+        en_txt = self.font_small.render(f"ENERGY: {en_status}", True, COLOR_WHITE)
         self.screen.blit(en_txt, (bar_x + 8, bar_y + 23))
 
         # 3. BARRA DE EXPERIENCIA (XP)
@@ -1919,7 +1921,7 @@ class CyberDroneGame:
         self.screen.blit(xp_txt, (bar_x + 82, bar_y + 48))
 
         # Botón de Pausa [P]
-        pause_badge = self.font_small.render("[P] PAUSA", True, COLOR_GOLD)
+        pause_badge = self.font_small.render("[P] PAUSE", True, COLOR_GOLD)
         pygame.draw.rect(self.screen, (10, 12, 20), (bar_x, bar_y + 92, 95, 22), border_radius=4)
         pygame.draw.rect(self.screen, COLOR_GOLD, (bar_x, bar_y + 92, 95, 22), 1, border_radius=4)
         self.screen.blit(pause_badge, (bar_x + 8, bar_y + 94))
@@ -1932,7 +1934,7 @@ class CyberDroneGame:
         score_surf = self.font_mid.render(f"SCORE {self.score:06d}", True, COLOR_GOLD)
         self.screen.blit(score_surf, (score_panel.x + 15, score_panel.y + 6))
 
-        stage_names = ["AZOTEAS", "BIO-LAB", "COMPLEJO", "RUINAS", "FORTALEZA", "WARZONE", "ESTRATOSFERA", "BOSS CORE"]
+        stage_names = ["ROOFTOPS", "BIO-LAB", "COMPLEX", "RUINS", "FORTRESS", "WARZONE", "STRATOSPHERE", "BOSS CORE"]
         stg_idx = min(len(stage_names) - 1, max(0, self.current_level - 1))
         stage_surf = self.font_small.render(f"STAGE {self.current_level} - {stage_names[stg_idx]}", True, COLOR_CYAN)
         self.screen.blit(stage_surf, (score_panel.x + 15, score_panel.y + 34))
@@ -1994,7 +1996,7 @@ class CyberDroneGame:
         self.screen.blit(overlay, (0, 0))
 
         opts = self.get_pause_options()
-        panel_w, panel_h = 570, 390
+        panel_w, panel_h = 680, 420
         px = (SCREEN_WIDTH - panel_w) // 2
         py = (SCREEN_HEIGHT - panel_h) // 2
 
@@ -2004,7 +2006,7 @@ class CyberDroneGame:
         pygame.draw.rect(self.screen, COLOR_PURPLE, (px, py, panel_w, panel_h), 4, border_radius=10)
         pygame.draw.rect(self.screen, diff_cfg["color"], (px + 6, py + 6, panel_w - 12, panel_h - 12), 2, border_radius=8)
 
-        p_title = self.font_large.render("= PAUSA =", True, COLOR_GOLD)
+        p_title = self.font_large.render("= PAUSE =", True, COLOR_GOLD)
         self.screen.blit(p_title, ((SCREEN_WIDTH - p_title.get_width()) // 2, py + 22))
 
         for idx, opt_text in enumerate(opts):
@@ -2023,7 +2025,7 @@ class CyberDroneGame:
 
             self.screen.blit(txt_surf, (px + 45, opt_y))
 
-        hint = self.font_small.render("[↑/↓] SELECCIONAR   [←/→] CAMBIAR DIFICULTAD   [ENTER] ACEPTAR", True, (170, 180, 210))
+        hint = self.font_small.render("[UP/DOWN] SELECT   [LEFT/RIGHT] CHANGE DIFFICULTY   [ENTER] ACCEPT", True, (170, 180, 210))
         self.screen.blit(hint, ((SCREEN_WIDTH - hint.get_width()) // 2, py + panel_h - 36))
 
     def draw_welcome(self):
@@ -2046,7 +2048,7 @@ class CyberDroneGame:
 
         t_ticks = pygame.time.get_ticks() / 1000.0
         title_text = "CYBER DRONE"
-        sub_text = "OVERDRIVE: PROTOCOLO PURPURA"
+        sub_text = "OVERDRIVE: PURPLE PROTOCOL"
 
         shadow_t = self.font_title.render(title_text, True, (0, 0, 0))
         main_t = self.font_title.render(title_text, True, COLOR_PURPLE_LIGHT)
@@ -2074,76 +2076,78 @@ class CyberDroneGame:
         pygame.draw.rect(self.screen, COLOR_CYAN, (ctrl_box.x + 4, ctrl_box.y + 4, ctrl_box.w - 8, ctrl_box.h - 8), 1, border_radius=6)
 
         lines = [
-            ("== SISTEMAS DE VUELO Y COMBATE AÉREO ==", COLOR_GOLD),
-            ("Moverse y Girar: Flechas [←][→][↑][↓] o [W][A][S][D] (Más ágil y veloz)", COLOR_WHITE),
-            ("Disparo Láser:  [ESPACIO] o Clic Izquierdo (Dispara en tu dirección de vuelo)", COLOR_WHITE),
-            ("Girar y Atrás:  [A] o [←] para dar media vuelta y disparar hacia atrás", COLOR_CYAN),
-            ("Mega Rayo [E]:  Mantén [E] durante 1 segundo para cargarlo (-45 Energía)", COLOR_PURPLE_LIGHT),
-            ("Turbo Dash:     [SHIFT] o Clic Derecho para evasión rápida (-20 Energía)", COLOR_CYAN),
-            ("Recargas:       Botes AZULES = Energía  |  Botes VERDES = Salud (1 Barra)", COLOR_GREEN),
+            ("== FLIGHT & AERIAL COMBAT SYSTEMS ==", COLOR_GOLD),
+            ("Move & Turn:    Arrows or [W][A][S][D] (Fast & agile flight)", COLOR_WHITE),
+            ("Laser Fire:     [SPACE] or Left Click (Shoots in flight direction)", COLOR_WHITE),
+            ("Turn & Reverse: [A] or [LEFT] to turn around and fire backward", COLOR_CYAN),
+            ("Mega Beam [E]:  Hold [E] for 1 sec to charge up (-45 Energy)", COLOR_PURPLE_LIGHT),
+            ("Turbo Dash:     [SHIFT] or Right Click for quick evasion (-20 Energy)", COLOR_CYAN),
+            ("Pickups:        BLUE Canisters = Energy  |  GREEN = Health Repair", COLOR_GREEN),
         ]
         for idx, (txt, col) in enumerate(lines):
             s = self.font_small.render(txt, True, col)
             self.screen.blit(s, (ctrl_box.x + 22, ctrl_box.y + 10 + idx * 25))
 
-        # --- SELECTOR DE DIFICULTAD INTERACTIVO ---
+                # --- COMPACT INTERACTIVE DIFFICULTY SELECTOR ---
         diff_cfg = self.get_difficulty_config()
-        diff_box = pygame.Rect(SCREEN_WIDTH // 2 - 380, 438, 760, 162)
+        # Responsive positioning for 1920x1080 (smaller & clean)
+        diff_box_y = int(SCREEN_HEIGHT * 0.65)
+        diff_box = pygame.Rect(SCREEN_WIDTH // 2 - 320, diff_box_y, 640, 130)
         pygame.draw.rect(self.screen, (12, 14, 26), diff_box, border_radius=8)
-        pygame.draw.rect(self.screen, diff_cfg["color"], diff_box, 3, border_radius=8)
+        pygame.draw.rect(self.screen, diff_cfg["color"], diff_box, 2, border_radius=8)
 
-        # Botones de navegación con flechas vectoriales poligonales nítidas
-        left_btn = pygame.Rect(diff_box.x + 16, diff_box.y + 12, 54, 40)
-        right_btn = pygame.Rect(diff_box.right - 70, diff_box.y + 12, 54, 40)
+        # Arrow buttons for mouse selection
+        left_btn = pygame.Rect(diff_box.x + 12, diff_box.y + 10, 44, 32)
+        right_btn = pygame.Rect(diff_box.right - 56, diff_box.y + 10, 44, 32)
         pygame.draw.rect(self.screen, (30, 20, 50), left_btn, border_radius=6)
         pygame.draw.rect(self.screen, diff_cfg["color"], left_btn, 2, border_radius=6)
         pygame.draw.rect(self.screen, (30, 20, 50), right_btn, border_radius=6)
         pygame.draw.rect(self.screen, diff_cfg["color"], right_btn, 2, border_radius=6)
 
-        # Flecha izquierda vectorial
+        # Sharp vector arrows
         pts_left = [
-            (left_btn.centerx + 8, left_btn.centery - 10),
-            (left_btn.centerx - 10, left_btn.centery),
-            (left_btn.centerx + 8, left_btn.centery + 10)
+            (left_btn.centerx + 6, left_btn.centery - 8),
+            (left_btn.centerx - 8, left_btn.centery),
+            (left_btn.centerx + 6, left_btn.centery + 8)
         ]
         pygame.draw.polygon(self.screen, diff_cfg["color"], pts_left)
 
-        # Flecha derecha vectorial
         pts_right = [
-            (right_btn.centerx - 8, right_btn.centery - 10),
-            (right_btn.centerx + 10, right_btn.centery),
-            (right_btn.centerx - 8, right_btn.centery + 10)
+            (right_btn.centerx - 6, right_btn.centery - 8),
+            (right_btn.centerx + 8, right_btn.centery),
+            (right_btn.centerx - 6, right_btn.centery + 8)
         ]
         pygame.draw.polygon(self.screen, diff_cfg["color"], pts_right)
 
-        diff_title = self.font_large.render(f"[ {diff_cfg['name']} ]", True, diff_cfg["color"])
-        self.screen.blit(diff_title, diff_title.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 32)))
+        diff_title = self.font_mid.render(f"[ {diff_cfg['name']} ]", True, diff_cfg["color"])
+        self.screen.blit(diff_title, diff_title.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 26)))
 
-        # Multiplicadores de Dificultad
+        # Difficulty Multipliers Line
         cad_txt = f"x{(1.0/diff_cfg['shoot_cooldown_mult']):.2f}"
         stats_line = (
-            f"VEL MOV: x{diff_cfg['move_speed_mult']:.2f}   "
-            f"VEL BALA: x{diff_cfg['bullet_speed_mult']:.2f}   "
-            f"CADENCIA: {cad_txt}   "
-            f"SALUD: x{diff_cfg['hp_mult']:.2f}   "
-            f"DAÑO: x{diff_cfg['damage_mult']:.2f}"
+            f"SPEED: x{diff_cfg['move_speed_mult']:.2f}  "
+            f"BULLET: x{diff_cfg['bullet_speed_mult']:.2f}  "
+            f"FIRE RATE: {cad_txt}  "
+            f"HP: x{diff_cfg['hp_mult']:.2f}  "
+            f"DMG: x{diff_cfg['damage_mult']:.2f}"
         )
         stats_surf = self.font_small.render(stats_line, True, COLOR_GOLD)
-        self.screen.blit(stats_surf, stats_surf.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 73)))
+        self.screen.blit(stats_surf, stats_surf.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 58)))
 
-        # Descripción y Puntuación
+        # Description Line
         desc_surf = self.font_small.render(diff_cfg["description"], True, COLOR_WHITE)
-        self.screen.blit(desc_surf, desc_surf.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 100)))
+        self.screen.blit(desc_surf, desc_surf.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 82)))
 
-        hint_nav = self.font_small.render(f"[←]/[→] o [A]/[D] CAMBIAR DIFICULTAD   |   BONIFICADOR SCORE: x{diff_cfg['score_mult']:.2f}", True, diff_cfg["color"])
-        self.screen.blit(hint_nav, hint_nav.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 130)))
+        hint_nav = self.font_small.render(f"[<-]/[->] or [A]/[D] CHANGE DIFFICULTY   |   SCORE MULT: x{diff_cfg['score_mult']:.2f}", True, diff_cfg["color"])
+        self.screen.blit(hint_nav, hint_nav.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 107)))
 
-        # Prompt de Inicio de Misión
+        # Mission Launch Prompt
         if int(t_ticks * 2.5) % 2 == 0:
-            prompt_btn = pygame.Rect(SCREEN_WIDTH // 2 - 280, 615, 560, 48)
+            prompt_y = diff_box.bottom + 25
+            prompt_btn = pygame.Rect(SCREEN_WIDTH // 2 - 260, prompt_y, 520, 48)
             pygame.draw.rect(self.screen, (10, 16, 28), prompt_btn, border_radius=8)
             pygame.draw.rect(self.screen, COLOR_GOLD, prompt_btn, 2, border_radius=8)
-            prompt_txt = self.font_mid.render(f">> INICIAR MISIÓN [{diff_cfg['name']}] <<", True, COLOR_GOLD)
+            prompt_txt = self.font_mid.render(f">> LAUNCH MISSION [{diff_cfg['name']}] <<", True, COLOR_GOLD)
             self.screen.blit(prompt_txt, prompt_txt.get_rect(center=prompt_btn.center))
 
     def draw_level_clear(self):
@@ -2156,8 +2160,8 @@ class CyberDroneGame:
         cy = (SCREEN_HEIGHT - 140) // 2 - 50
         self.screen.blit(clear_banner, (cx, cy))
 
-        txt = self.font_mid.render(f"¡SECTOR {self.current_level} ASEGURADO!", True, COLOR_CYAN)
-        sub = self.font_small.render("Iniciando salto hiperespacial al siguiente nivel...", True, COLOR_WHITE)
+        txt = self.font_mid.render(f"STAGE {self.current_level} CLEARED!", True, COLOR_CYAN)
+        sub = self.font_small.render("Initiating hyperspace jump to next sector...", True, COLOR_WHITE)
         self.screen.blit(txt, ((SCREEN_WIDTH - txt.get_width()) // 2, cy + 160))
         self.screen.blit(sub, ((SCREEN_WIDTH - sub.get_width()) // 2, cy + 200))
 
@@ -2166,7 +2170,7 @@ class CyberDroneGame:
         overlay.fill((28, 6, 12, 215))
         self.screen.blit(overlay, (0, 0))
 
-        t = self.font_large.render("M I S I Ó N   F A L L I D A", True, COLOR_RED)
+        t = self.font_large.render("M I S S I O N   F A I L E D", True, COLOR_RED)
         self.screen.blit(t, ((SCREEN_WIDTH - t.get_width()) // 2, 160))
 
         diff_cfg = self.get_difficulty_config()
@@ -2174,11 +2178,11 @@ class CyberDroneGame:
         pygame.draw.rect(self.screen, (15, 10, 18), res_rect, border_radius=8)
         pygame.draw.rect(self.screen, COLOR_RED, res_rect, 2, border_radius=8)
 
-        s0 = self.font_small.render(f"DIFICULTAD JUGADA: {diff_cfg['name']}", True, diff_cfg["color"])
-        s1 = self.font_mid.render(f"PUNTUACIÓN: {self.score:06d} (x{diff_cfg['score_mult']:.2f})", True, COLOR_GOLD)
-        s2 = self.font_mid.render(f"RÉCORD:     {self.high_score:06d}", True, COLOR_WHITE)
-        s3 = self.font_small.render(f"Enemigos aéreos destruidos: {self.enemies_killed}", True, COLOR_CYAN)
-        s4 = self.font_small.render(f"Sector alcanzado:          NIVEL {self.current_level}", True, COLOR_PURPLE_LIGHT)
+        s0 = self.font_small.render(f"DIFFICULTY: {diff_cfg['name']}", True, diff_cfg["color"])
+        s1 = self.font_mid.render(f"SCORE: {self.score:06d} (x{diff_cfg['score_mult']:.2f})", True, COLOR_GOLD)
+        s2 = self.font_mid.render(f"HIGH SCORE: {self.high_score:06d}", True, COLOR_WHITE)
+        s3 = self.font_small.render(f"Aerial enemies destroyed: {self.enemies_killed}", True, COLOR_CYAN)
+        s4 = self.font_small.render(f"Sector reached:            STAGE {self.current_level}", True, COLOR_PURPLE_LIGHT)
         
         self.screen.blit(s0, (res_rect.x + 35, res_rect.y + 18))
         self.screen.blit(s1, (res_rect.x + 35, res_rect.y + 46))
@@ -2186,8 +2190,8 @@ class CyberDroneGame:
         self.screen.blit(s3, (res_rect.x + 35, res_rect.y + 126))
         self.screen.blit(s4, (res_rect.x + 35, res_rect.y + 158))
 
-        prompt1 = self.font_mid.render("[R] o [ENTER] - REINTENTAR MISIÓN", True, COLOR_GREEN)
-        prompt2 = self.font_small.render("[ESC] - REGRESAR AL MENÚ PRINCIPAL", True, (180, 180, 180))
+        prompt1 = self.font_mid.render("[R] or [ENTER] - RETRY MISSION", True, COLOR_GREEN)
+        prompt2 = self.font_small.render("[ESC] - RETURN TO MAIN MENU", True, (180, 180, 180))
         self.screen.blit(prompt1, ((SCREEN_WIDTH - prompt1.get_width()) // 2, 475))
         self.screen.blit(prompt2, ((SCREEN_WIDTH - prompt2.get_width()) // 2, 525))
 
@@ -2196,28 +2200,28 @@ class CyberDroneGame:
         overlay.fill((8, 20, 35, 215))
         self.screen.blit(overlay, (0, 0))
 
-        t = self.font_large.render("¡V I C T O R I A   A B S O L U T A!", True, COLOR_GOLD)
-        sub = self.font_mid.render("EL TITAN GUNSHIP HA SIDO ELIMINADO", True, COLOR_CYAN)
+        t = self.font_large.render("A B S O L U T E   V I C T O R Y !", True, COLOR_GOLD)
+        sub = self.font_mid.render("THE TITAN GUNSHIP HAS BEEN ELIMINATED", True, COLOR_CYAN)
         self.screen.blit(t, ((SCREEN_WIDTH - t.get_width()) // 2, 130))
         self.screen.blit(sub, ((SCREEN_WIDTH - sub.get_width()) // 2, 195))
 
         diff_cfg = self.get_difficulty_config()
-        d_surf = self.font_mid.render(f"SUPERADO EN DIFICULTAD: {diff_cfg['name']}", True, diff_cfg["color"])
+        d_surf = self.font_mid.render(f"CLEARED ON DIFFICULTY: {diff_cfg['name']}", True, diff_cfg["color"])
         self.screen.blit(d_surf, ((SCREEN_WIDTH - d_surf.get_width()) // 2, 235))
 
         res_rect = pygame.Rect(SCREEN_WIDTH // 2 - 270, 275, 540, 160)
         pygame.draw.rect(self.screen, (10, 18, 30), res_rect, border_radius=8)
         pygame.draw.rect(self.screen, COLOR_GOLD, res_rect, 2, border_radius=8)
 
-        s1 = self.font_mid.render(f"PUNTUACIÓN FINAL: {self.score:06d} (x{diff_cfg['score_mult']:.2f})", True, COLOR_WHITE)
-        s2 = self.font_small.render(f"Evolución máxima del Drone lograda (Lv.3)", True, COLOR_PURPLE_LIGHT)
-        s3 = self.font_small.render(f"Total de enemigos destruidos: {self.enemies_killed}", True, COLOR_GREEN)
+        s1 = self.font_mid.render(f"FINAL SCORE: {self.score:06d} (x{diff_cfg['score_mult']:.2f})", True, COLOR_WHITE)
+        s2 = self.font_small.render(f"Max Drone Evolution Achieved (Lv.3)", True, COLOR_PURPLE_LIGHT)
+        s3 = self.font_small.render(f"Total enemies destroyed: {self.enemies_killed}", True, COLOR_GREEN)
         self.screen.blit(s1, (res_rect.x + 40, res_rect.y + 25))
         self.screen.blit(s2, (res_rect.x + 40, res_rect.y + 70))
         self.screen.blit(s3, (res_rect.x + 40, res_rect.y + 105))
 
-        prompt1 = self.font_mid.render("[R] o [ENTER] - VOLVER A JUGAR", True, COLOR_GREEN)
-        prompt2 = self.font_small.render("[ESC] - SALIR AL MENÚ", True, (180, 180, 180))
+        prompt1 = self.font_mid.render("[R] or [ENTER] - PLAY AGAIN", True, COLOR_GREEN)
+        prompt2 = self.font_small.render("[ESC] - QUIT TO MAIN MENU", True, (180, 180, 180))
         self.screen.blit(prompt1, ((SCREEN_WIDTH - prompt1.get_width()) // 2, 470))
         self.screen.blit(prompt2, ((SCREEN_WIDTH - prompt2.get_width()) // 2, 520))
 
