@@ -1413,6 +1413,20 @@ class CyberDroneGame:
         self.ambient_particles = []
         self._init_ambient()
 
+    def render_fitted_text(self, font, text, color, max_width):
+        """Render text and scale it down if it exceeds max_width, so it fits inside its box."""
+        surf = font.render(str(text), True, color)
+        sw = surf.get_width()
+        if sw > max_width and sw > 0:
+            scale = max_width / float(sw)
+            new_w = max(1, int(sw * scale))
+            new_h = max(1, int(surf.get_height() * scale))
+            try:
+                surf = pygame.transform.smoothscale(surf, (new_w, new_h))
+            except Exception:
+                surf = pygame.transform.scale(surf, (new_w, new_h))
+        return surf
+
     @property
     def current_difficulty(self):
         return self.difficulties[self.difficulty_index]
@@ -1974,7 +1988,7 @@ class CyberDroneGame:
         hp_col = COLOR_GREEN if hp_pct > 0.4 else COLOR_RED
         pygame.draw.rect(self.screen, hp_col, (bar_x, bar_y, int(235 * hp_pct), 18), border_radius=4)
         pygame.draw.rect(self.screen, COLOR_WHITE, (bar_x, bar_y, 235, 18), 2, border_radius=4)
-        hp_txt = self.font_small.render(f"HP: {int(self.player.hp)}/{self.player.max_hp}", True, COLOR_WHITE)
+        hp_txt = self.render_fitted_text(self.font_small, f"HP: {int(self.player.hp)}/{self.player.max_hp}", COLOR_WHITE, max_width=220)
         self.screen.blit(hp_txt, (bar_x + 8, bar_y + 1))
 
         # 2. BARRA DE ENERGÍA (Para el Super-Disparo [E] y Dash)
@@ -1990,7 +2004,7 @@ class CyberDroneGame:
             en_status = f"ENERGY {int(self.player.energy)}% [READY]"
         else:
             en_status = f"ENERGY {int(self.player.energy)}%"
-        en_txt = self.font_small.render(en_status, True, COLOR_WHITE)
+        en_txt = self.render_fitted_text(self.font_small, en_status, COLOR_WHITE, max_width=220)
         self.screen.blit(en_txt, (bar_x + 8, bar_y + 23))
 
         # 3. BARRA DE EXPERIENCIA (XP)
@@ -2009,7 +2023,7 @@ class CyberDroneGame:
         self.screen.blit(xp_txt, (bar_x + 82, bar_y + 48))
 
         # Botón de Pausa [P]
-        pause_badge = self.font_small.render("[P] PAUSE", True, COLOR_GOLD)
+        pause_badge = self.render_fitted_text(self.font_small, "[P] PAUSE", COLOR_GOLD, max_width=82)
         pygame.draw.rect(self.screen, (10, 12, 20), (bar_x, bar_y + 92, 95, 22), border_radius=4)
         pygame.draw.rect(self.screen, COLOR_GOLD, (bar_x, bar_y + 92, 95, 22), 1, border_radius=4)
         self.screen.blit(pause_badge, (bar_x + 8, bar_y + 94))
@@ -2019,18 +2033,18 @@ class CyberDroneGame:
         pygame.draw.rect(self.screen, (10, 12, 22), score_panel, border_radius=6)
         pygame.draw.rect(self.screen, COLOR_CYAN, score_panel, 2, border_radius=6)
         
-        score_surf = self.font_mid.render(f"SCORE {self.score:06d}", True, COLOR_GOLD)
+        score_surf = self.render_fitted_text(self.font_mid, f"SCORE {self.score:06d}", COLOR_GOLD, max_width=285)
         self.screen.blit(score_surf, (score_panel.x + 15, score_panel.y + 6))
 
         # Indicador de FPS suave colocado en la esquina superior del panel de puntuación
         cur_fps = int(self.clock.get_fps())
         fps_str = f"FPS {cur_fps if cur_fps > 0 else FPS}"
-        fps_surf = self.font_small.render(fps_str, True, COLOR_GREEN if cur_fps >= 55 or cur_fps == 0 else COLOR_GOLD)
+        fps_surf = self.render_fitted_text(self.font_small, fps_str, COLOR_GREEN if cur_fps >= 55 or cur_fps == 0 else COLOR_GOLD, max_width=80)
         self.screen.blit(fps_surf, (score_panel.right - fps_surf.get_width() - 15, score_panel.y + 10))
 
         stage_names = ["ROOFTOPS", "BIO-LAB", "COMPLEX", "RUINS", "FORTRESS", "WARZONE", "STRATOSPHERE", "BOSS CORE"]
         stg_idx = min(len(stage_names) - 1, max(0, self.current_level - 1))
-        stage_surf = self.font_small.render(f"STAGE {self.current_level} - {stage_names[stg_idx]}", True, COLOR_CYAN)
+        stage_surf = self.render_fitted_text(self.font_small, f"STAGE {self.current_level} - {stage_names[stg_idx]}", COLOR_CYAN, max_width=285)
         self.screen.blit(stage_surf, (score_panel.x + 15, score_panel.y + 34))
 
         diff_cfg = self.get_difficulty_config()
@@ -2039,7 +2053,7 @@ class CyberDroneGame:
             diff_name_display = "REALLY IMPOSSIBLE"
         elif diff_name_display == "DARK SOULS DIFFICULTY":
             diff_name_display = "DARK SOULS"
-        diff_surf = self.font_small.render(f"DIF: {diff_name_display}", True, diff_cfg["color"])
+        diff_surf = self.render_fitted_text(self.font_small, f"DIF: {diff_name_display}", diff_cfg["color"], max_width=170)
         self.screen.blit(diff_surf, (score_panel.x + 15, score_panel.y + 58))
 
         if self.player.level_up_timer > 0:
@@ -2058,7 +2072,7 @@ class CyberDroneGame:
             pygame.draw.rect(self.screen, bar_c, (bb_x, bb_y, int(bb_w * boss_pct), bb_h), border_radius=4)
             pygame.draw.rect(self.screen, COLOR_WHITE, (bb_x, bb_y, bb_w, bb_h), 2, border_radius=4)
 
-            name_surf = self.font_small.render(f"BOSS: {self.boss.boss_name}", True, COLOR_WHITE)
+            name_surf = self.render_fitted_text(self.font_small, f"BOSS: {self.boss.boss_name}", COLOR_WHITE, max_width=580)
             self.screen.blit(name_surf, (bb_x + 10, bb_y - 20))
 
     def draw_playing(self):
@@ -2111,14 +2125,14 @@ class CyberDroneGame:
                 pygame.draw.rect(self.screen, (45, 20, 75), sel_rect, border_radius=6)
                 pygame.draw.rect(self.screen, COLOR_CYAN, sel_rect, 2, border_radius=6)
                 col = diff_cfg["color"] if idx == 1 else COLOR_CYAN
-                txt_surf = self.font_mid.render(f">> {opt_text}", True, col)
+                txt_surf = self.render_fitted_text(self.font_mid, f">> {opt_text}", col, max_width=panel_w - 90)
             else:
                 col = diff_cfg["color"] if idx == 1 else COLOR_WHITE
-                txt_surf = self.font_mid.render(f"   {opt_text}", True, col)
+                txt_surf = self.render_fitted_text(self.font_mid, f"   {opt_text}", col, max_width=panel_w - 90)
 
             self.screen.blit(txt_surf, (px + 40, opt_y))
 
-        hint = self.font_small.render("[UP/DOWN] SELECT  |  [LEFT/RIGHT] DIFFICULTY  |  [ENTER] ACCEPT", True, (170, 180, 210))
+        hint = self.render_fitted_text(self.font_small, "[UP/DOWN] SELECT  |  [LEFT/RIGHT] DIFFICULTY  |  [ENTER] ACCEPT", (170, 180, 210), max_width=panel_w - 40)
         self.screen.blit(hint, ((SCREEN_WIDTH - hint.get_width()) // 2, py + panel_h - 34))
 
     def draw_welcome(self):
@@ -2178,7 +2192,7 @@ class CyberDroneGame:
             ("Pickups:        BLUE Canisters = Energy  |  GREEN = Health Repair", COLOR_GREEN),
         ]
         for idx, (txt, col) in enumerate(lines):
-            s = self.font_small.render(txt, True, col)
+            s = self.render_fitted_text(self.font_small, txt, col, max_width=ctrl_box.w - 44)
             self.screen.blit(s, (ctrl_box.x + 22, ctrl_box.y + 10 + idx * 26))
 
         # --- COMPACT INTERACTIVE DIFFICULTY SELECTOR ---
@@ -2211,7 +2225,7 @@ class CyberDroneGame:
         ]
         pygame.draw.polygon(self.screen, diff_cfg["color"], pts_right)
 
-        diff_title = self.font_mid.render(f"[ {diff_cfg['name']} ]", True, diff_cfg["color"])
+        diff_title = self.render_fitted_text(self.font_mid, f"[ {diff_cfg['name']} ]", diff_cfg["color"], max_width=diff_box.w - 140)
         self.screen.blit(diff_title, diff_title.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 26)))
 
         # Difficulty Multipliers Line
@@ -2223,14 +2237,14 @@ class CyberDroneGame:
             f"HP: x{diff_cfg['hp_mult']:.2f}  |  "
             f"DMG: x{diff_cfg['damage_mult']:.2f}"
         )
-        stats_surf = self.font_small.render(stats_line, True, COLOR_GOLD)
+        stats_surf = self.render_fitted_text(self.font_small, stats_line, COLOR_GOLD, max_width=diff_box.w - 30)
         self.screen.blit(stats_surf, stats_surf.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 58)))
 
         # Description Line
-        desc_surf = self.font_small.render(diff_cfg["description"], True, COLOR_WHITE)
+        desc_surf = self.render_fitted_text(self.font_small, diff_cfg["description"], COLOR_WHITE, max_width=diff_box.w - 30)
         self.screen.blit(desc_surf, desc_surf.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 83)))
 
-        hint_nav = self.font_small.render(f"[<-]/[->] or [A]/[D] DIFFICULTY   |   SCORE: x{diff_cfg['score_mult']:.2f}   |   [F11] FULLSCREEN", True, diff_cfg["color"])
+        hint_nav = self.render_fitted_text(self.font_small, f"[<-]/[->] or [A]/[D] DIFFICULTY   |   SCORE: x{diff_cfg['score_mult']:.2f}   |   [F11] FULLSCREEN", diff_cfg["color"], max_width=diff_box.w - 30)
         self.screen.blit(hint_nav, hint_nav.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 110)))
 
         # Mission Launch Prompt
@@ -2239,7 +2253,7 @@ class CyberDroneGame:
             prompt_btn = pygame.Rect(SCREEN_WIDTH // 2 - 270, prompt_y, 540, 48)
             pygame.draw.rect(self.screen, (10, 16, 28), prompt_btn, border_radius=8)
             pygame.draw.rect(self.screen, COLOR_GOLD, prompt_btn, 2, border_radius=8)
-            prompt_txt = self.font_mid.render(f">> LAUNCH MISSION [{diff_cfg['name']}] <<", True, COLOR_GOLD)
+            prompt_txt = self.render_fitted_text(self.font_mid, f">> LAUNCH MISSION [{diff_cfg['name']}] <<", COLOR_GOLD, max_width=prompt_btn.w - 30)
             self.screen.blit(prompt_txt, prompt_txt.get_rect(center=prompt_btn.center))
 
     def draw_level_clear(self):
@@ -2270,11 +2284,11 @@ class CyberDroneGame:
         pygame.draw.rect(self.screen, (15, 10, 18), res_rect, border_radius=8)
         pygame.draw.rect(self.screen, COLOR_RED, res_rect, 2, border_radius=8)
 
-        s0 = self.font_small.render(f"DIFFICULTY: {diff_cfg['name']}", True, diff_cfg["color"])
-        s1 = self.font_mid.render(f"SCORE: {self.score:06d} (x{diff_cfg['score_mult']:.2f})", True, COLOR_GOLD)
-        s2 = self.font_mid.render(f"HIGH SCORE: {self.high_score:06d}", True, COLOR_WHITE)
-        s3 = self.font_small.render(f"Aerial enemies destroyed: {self.enemies_killed}", True, COLOR_CYAN)
-        s4 = self.font_small.render(f"Sector reached:            STAGE {self.current_level}", True, COLOR_PURPLE_LIGHT)
+        s0 = self.render_fitted_text(self.font_small, f"DIFFICULTY: {diff_cfg['name']}", diff_cfg["color"], max_width=res_rect.w - 70)
+        s1 = self.render_fitted_text(self.font_mid, f"SCORE: {self.score:06d} (x{diff_cfg['score_mult']:.2f})", COLOR_GOLD, max_width=res_rect.w - 70)
+        s2 = self.render_fitted_text(self.font_mid, f"HIGH SCORE: {self.high_score:06d}", COLOR_WHITE, max_width=res_rect.w - 70)
+        s3 = self.render_fitted_text(self.font_small, f"Aerial enemies destroyed: {self.enemies_killed}", COLOR_CYAN, max_width=res_rect.w - 70)
+        s4 = self.render_fitted_text(self.font_small, f"Sector reached: STAGE {self.current_level}", COLOR_PURPLE_LIGHT, max_width=res_rect.w - 70)
         
         self.screen.blit(s0, (res_rect.x + 35, res_rect.y + 18))
         self.screen.blit(s1, (res_rect.x + 35, res_rect.y + 46))
@@ -2305,9 +2319,9 @@ class CyberDroneGame:
         pygame.draw.rect(self.screen, (10, 18, 30), res_rect, border_radius=8)
         pygame.draw.rect(self.screen, COLOR_GOLD, res_rect, 2, border_radius=8)
 
-        s1 = self.font_mid.render(f"FINAL SCORE: {self.score:06d} (x{diff_cfg['score_mult']:.2f})", True, COLOR_WHITE)
-        s2 = self.font_small.render(f"Max Drone Evolution Achieved (Lv.3)", True, COLOR_PURPLE_LIGHT)
-        s3 = self.font_small.render(f"Total enemies destroyed: {self.enemies_killed}", True, COLOR_GREEN)
+        s1 = self.render_fitted_text(self.font_mid, f"FINAL SCORE: {self.score:06d} (x{diff_cfg['score_mult']:.2f})", COLOR_WHITE, max_width=res_rect.w - 80)
+        s2 = self.render_fitted_text(self.font_small, f"Max Drone Evolution Achieved (Lv.3)", COLOR_PURPLE_LIGHT, max_width=res_rect.w - 80)
+        s3 = self.render_fitted_text(self.font_small, f"Total enemies destroyed: {self.enemies_killed}", COLOR_GREEN, max_width=res_rect.w - 80)
         self.screen.blit(s1, (res_rect.x + 40, res_rect.y + 25))
         self.screen.blit(s2, (res_rect.x + 40, res_rect.y + 70))
         self.screen.blit(s3, (res_rect.x + 40, res_rect.y + 105))
