@@ -134,7 +134,7 @@ class AudioManager:
         self.music_paused = False
         try:
             if not pygame.mixer.get_init():
-                pygame.mixer.init(44100, -16, 2, 512)
+                pygame.mixer.init(44100, -16, 2, 2048)
             self._create_procedural_sounds()
             self._init_music()
             self.enabled = True
@@ -144,9 +144,10 @@ class AudioManager:
 
     def _init_music(self):
         base_dir = os.path.dirname(os.path.abspath(__file__))
+        # Priorizar .wav para máxima fidelidad y calidad de sonido sin compresión
         music_candidates = [
-            "musica_juego.mp3",
             "musica_juego.wav",
+            "musica_juego.mp3",
             "musica_juego.ogg",
         ]
 
@@ -157,7 +158,7 @@ class AudioManager:
                 if os.path.exists(candidate):
                     try:
                         pygame.mixer.music.load(candidate)
-                        pygame.mixer.music.set_volume(0.50)
+                        pygame.mixer.music.set_volume(0.60)
                         self.music_loaded = True
                         found_path = candidate
                         break
