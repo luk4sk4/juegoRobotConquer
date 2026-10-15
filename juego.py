@@ -133,7 +133,8 @@ class AudioManager:
         self.music_playing = False
         self.music_paused = False
         try:
-            pygame.mixer.init(44100, -16, 2, 512)
+            if not pygame.mixer.get_init():
+                pygame.mixer.init(44100, -16, 2, 512)
             self._create_procedural_sounds()
             self._init_music()
             self.enabled = True
@@ -142,20 +143,33 @@ class AudioManager:
             self.enabled = False
 
     def _init_music(self):
-        music_file = "Space Retro (1).mp3"
-        if not os.path.exists(music_file):
-            alt_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), music_file)
-            if os.path.exists(alt_path):
-                music_file = alt_path
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        music_candidates = [
+            "musica_juego.mp3",
+            "musica_juego.wav",
+            "musica_juego.ogg",
+        ]
 
-        if os.path.exists(music_file):
-            try:
-                pygame.mixer.music.load(music_file)
-                pygame.mixer.music.set_volume(0.40)
-                self.music_loaded = True
-            except Exception as e:
-                print("Error cargando música:", e)
-                self.music_loaded = False
+        found_path = None
+        for name in music_candidates:
+            # Primero en directorio actual de trabajo, luego relativo al script
+            for candidate in (name, os.path.join(base_dir, name)):
+                if os.path.exists(candidate):
+                    try:
+                        pygame.mixer.music.load(candidate)
+                        pygame.mixer.music.set_volume(0.50)
+                        self.music_loaded = True
+                        found_path = candidate
+                        break
+                    except Exception as e:
+                        print(f"No se pudo cargar {candidate}: {e}")
+            if self.music_loaded:
+                break
+
+        if self.music_loaded:
+            print(f"Música de fondo cargada con éxito: {found_path}")
+        else:
+            print("Aviso: No se pudo cargar ningún archivo de música compatible.")
 
     def _create_procedural_sounds(self):
         sr = 44100
@@ -270,12 +284,16 @@ class AudioManager:
             self.sounds[name].stop()
 
     def play_music(self, loops=-1):
-        if not self.enabled or not self.music_loaded:
+        if not self.enabled:
+            return
+        if not self.music_loaded:
+            self._init_music()
+        if not self.music_loaded:
             return
         try:
             if self.music_paused:
                 self.unpause_music()
-            elif not self.music_playing:
+            elif not pygame.mixer.music.get_busy() or not self.music_playing:
                 pygame.mixer.music.play(loops)
                 self.music_playing = True
                 self.music_paused = False
