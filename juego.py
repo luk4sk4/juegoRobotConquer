@@ -1375,10 +1375,10 @@ class CyberDroneGame:
         self.target_fps = FPS
         self.dt = 1.0 / FPS
         
-        self.font_title = pygame.font.SysFont("Impact", 54)
-        self.font_large = pygame.font.SysFont("Consolas", 42, bold=True)
-        self.font_mid = pygame.font.SysFont("Consolas", 24, bold=True)
-        self.font_small = pygame.font.SysFont("Consolas", 16, bold=True)
+        self.font_title = pygame.font.SysFont("Impact", 64)
+        self.font_large = pygame.font.SysFont("Consolas", 48, bold=True)
+        self.font_mid = pygame.font.SysFont("Consolas", 28, bold=True)
+        self.font_small = pygame.font.SysFont("Consolas", 20, bold=True)
 
         self.audio = AudioManager()
         self.audio.play_music()
@@ -1564,11 +1564,11 @@ class CyberDroneGame:
                     if self.state == "WELCOME":
                         mx, my = event.pos
                         # Clic en flechas del selector o en la tarjeta
-                        diff_box_y = int(SCREEN_HEIGHT * 0.65)
-                        left_arrow = pygame.Rect(SCREEN_WIDTH // 2 - 390 + 14, diff_box_y + 10, 44, 32)
-                        right_arrow = pygame.Rect(SCREEN_WIDTH // 2 + 390 - 58, diff_box_y + 10, 44, 32)
-                        diff_card = pygame.Rect(SCREEN_WIDTH // 2 - 330, diff_box_y, 660, 48)
-                        start_btn = pygame.Rect(SCREEN_WIDTH // 2 - 270, diff_box_y + 136 + 20, 540, 50)
+                        diff_box_y = int(SCREEN_HEIGHT * 0.60)
+                        left_arrow = pygame.Rect(SCREEN_WIDTH // 2 - 520 + 16, diff_box_y + 12, 54, 38)
+                        right_arrow = pygame.Rect(SCREEN_WIDTH // 2 + 520 - 70, diff_box_y + 12, 54, 38)
+                        diff_card = pygame.Rect(SCREEN_WIDTH // 2 - 400, diff_box_y, 800, 56)
+                        start_btn = pygame.Rect(SCREEN_WIDTH // 2 - 340, diff_box_y + 180 + 20, 680, 58)
 
                         if left_arrow.collidepoint(mx, my):
                             self.change_difficulty(-1)
@@ -1587,7 +1587,7 @@ class CyberDroneGame:
                         mx, my = event.pos
                         opts = self.get_pause_options()
                         for idx in range(len(opts)):
-                            rect = pygame.Rect(SCREEN_WIDTH // 2 - 355, (SCREEN_HEIGHT - 430) // 2 + 84 + idx * 52 - 6, 710, 44)
+                            rect = pygame.Rect(SCREEN_WIDTH // 2 - 400, (SCREEN_HEIGHT - 480) // 2 + 95 + idx * 58 - 6, 800, 46)
                             if rect.collidepoint(mx, my):
                                 self.pause_selected = idx
                                 self.audio.play('menu_select')
@@ -1595,7 +1595,7 @@ class CyberDroneGame:
 
                     elif self.state == "PLAYING":
                         mx, my = event.pos
-                        pause_btn = pygame.Rect(30, 25 + 92, 95, 22)
+                        pause_btn = pygame.Rect(30, 25 + 130, 140, 32)
                         if pause_btn.collidepoint(mx, my):
                             self.state = "PAUSED"
                             self.pause_selected = 0
@@ -1979,23 +1979,23 @@ class CyberDroneGame:
         hp_pct = max(0, self.player.hp / self.player.max_hp)
         energy_pct = max(0, self.player.energy / self.player.max_energy)
 
-        # Panel HUD superior izquierdo
-        pygame.draw.rect(self.screen, (10, 12, 22), (bar_x - 6, bar_y - 6, 280, 92), border_radius=6)
-        pygame.draw.rect(self.screen, COLOR_PURPLE, (bar_x - 6, bar_y - 6, 280, 92), 2, border_radius=6)
+        # Panel HUD superior izquierdo (Más amplio y legible)
+        pygame.draw.rect(self.screen, (10, 12, 22), (bar_x - 10, bar_y - 10, 370, 130), border_radius=8)
+        pygame.draw.rect(self.screen, COLOR_PURPLE, (bar_x - 10, bar_y - 10, 370, 130), 2, border_radius=8)
 
         # 1. BARRA DE SALUD (1 SOLA VIDA)
-        pygame.draw.rect(self.screen, (40, 20, 25), (bar_x, bar_y, 235, 18), border_radius=4)
+        pygame.draw.rect(self.screen, (40, 20, 25), (bar_x, bar_y, 350, 24), border_radius=4)
         hp_col = COLOR_GREEN if hp_pct > 0.4 else COLOR_RED
-        pygame.draw.rect(self.screen, hp_col, (bar_x, bar_y, int(235 * hp_pct), 18), border_radius=4)
-        pygame.draw.rect(self.screen, COLOR_WHITE, (bar_x, bar_y, 235, 18), 2, border_radius=4)
-        hp_txt = self.render_fitted_text(self.font_small, f"HP: {int(self.player.hp)}/{self.player.max_hp}", COLOR_WHITE, max_width=220)
-        self.screen.blit(hp_txt, (bar_x + 8, bar_y + 1))
+        pygame.draw.rect(self.screen, hp_col, (bar_x, bar_y, int(350 * hp_pct), 24), border_radius=4)
+        pygame.draw.rect(self.screen, COLOR_WHITE, (bar_x, bar_y, 350, 24), 2, border_radius=4)
+        hp_txt = self.render_fitted_text(self.font_small, f"HP: {int(self.player.hp)}/{self.player.max_hp}", COLOR_WHITE, max_width=330)
+        self.screen.blit(hp_txt, (bar_x + 10, bar_y + 1))
 
         # 2. BARRA DE ENERGÍA (Para el Super-Disparo [E] y Dash)
-        pygame.draw.rect(self.screen, (10, 25, 45), (bar_x, bar_y + 24, 235, 14), border_radius=3)
+        pygame.draw.rect(self.screen, (10, 25, 45), (bar_x, bar_y + 32, 350, 20), border_radius=3)
         en_col = COLOR_CYAN if self.player.energy >= 45.0 else (80, 160, 200)
-        pygame.draw.rect(self.screen, en_col, (bar_x, bar_y + 24, int(235 * energy_pct), 14), border_radius=3)
-        pygame.draw.rect(self.screen, (160, 230, 255), (bar_x, bar_y + 24, 235, 14), 1, border_radius=3)
+        pygame.draw.rect(self.screen, en_col, (bar_x, bar_y + 32, int(350 * energy_pct), 20), border_radius=3)
+        pygame.draw.rect(self.screen, (160, 230, 255), (bar_x, bar_y + 32, 350, 20), 1, border_radius=3)
         
         if self.player.charge_timer > 0:
             ch_pct = int((self.player.charge_timer / float(self.player.charge_max)) * 100)
@@ -2004,8 +2004,8 @@ class CyberDroneGame:
             en_status = f"ENERGY {int(self.player.energy)}% [READY]"
         else:
             en_status = f"ENERGY {int(self.player.energy)}%"
-        en_txt = self.render_fitted_text(self.font_small, en_status, COLOR_WHITE, max_width=220)
-        self.screen.blit(en_txt, (bar_x + 8, bar_y + 23))
+        en_txt = self.render_fitted_text(self.font_small, en_status, COLOR_WHITE, max_width=330)
+        self.screen.blit(en_txt, (bar_x + 10, bar_y + 30))
 
         # 3. BARRA DE EXPERIENCIA (XP)
         xp_next = self.player.xp_targets[self.player.level] if self.player.level < 4 else self.player.xp_targets[-1]
@@ -2013,39 +2013,39 @@ class CyberDroneGame:
         xp_pct = 1.0 if self.player.level >= 4 else max(0, (self.player.xp - xp_prev) / max(1, (xp_next - xp_prev)))
         
         badge_name = f"badge_lv{self.player.level}.png" if self.player.level < 4 else "badge_lvmax.png"
-        badge_img = self.assets.get_image(badge_name, (70, 36))
-        self.screen.blit(badge_img, (bar_x, bar_y + 44))
+        badge_img = self.assets.get_image(badge_name, (84, 44))
+        self.screen.blit(badge_img, (bar_x, bar_y + 60))
 
-        pygame.draw.rect(self.screen, (25, 12, 40), (bar_x + 78, bar_y + 50, 157, 14), border_radius=3)
-        pygame.draw.rect(self.screen, COLOR_PURPLE, (bar_x + 78, bar_y + 50, int(157 * xp_pct), 14), border_radius=3)
-        pygame.draw.rect(self.screen, COLOR_PURPLE_LIGHT, (bar_x + 78, bar_y + 50, 157, 14), 1, border_radius=3)
-        xp_txt = self.font_small.render("EXP", True, COLOR_WHITE)
-        self.screen.blit(xp_txt, (bar_x + 82, bar_y + 48))
+        pygame.draw.rect(self.screen, (25, 12, 40), (bar_x + 94, bar_y + 68, 256, 20), border_radius=3)
+        pygame.draw.rect(self.screen, COLOR_PURPLE, (bar_x + 94, bar_y + 68, int(256 * xp_pct), 20), border_radius=3)
+        pygame.draw.rect(self.screen, COLOR_PURPLE_LIGHT, (bar_x + 94, bar_y + 68, 256, 20), 1, border_radius=3)
+        xp_txt = self.render_fitted_text(self.font_small, "EXP", COLOR_WHITE, max_width=60)
+        self.screen.blit(xp_txt, (bar_x + 100, bar_y + 67))
 
         # Botón de Pausa [P]
-        pause_badge = self.render_fitted_text(self.font_small, "[P] PAUSE", COLOR_GOLD, max_width=82)
-        pygame.draw.rect(self.screen, (10, 12, 20), (bar_x, bar_y + 92, 95, 22), border_radius=4)
-        pygame.draw.rect(self.screen, COLOR_GOLD, (bar_x, bar_y + 92, 95, 22), 1, border_radius=4)
-        self.screen.blit(pause_badge, (bar_x + 8, bar_y + 94))
+        pygame.draw.rect(self.screen, (10, 12, 20), (bar_x, bar_y + 130, 140, 32), border_radius=6)
+        pygame.draw.rect(self.screen, COLOR_GOLD, (bar_x, bar_y + 130, 140, 32), 2, border_radius=6)
+        pause_badge = self.render_fitted_text(self.font_small, "[P] PAUSE", COLOR_GOLD, max_width=120)
+        self.screen.blit(pause_badge, (bar_x + 14, bar_y + 134))
 
-        # Marcador Score Superior Derecho
-        score_panel = pygame.Rect(SCREEN_WIDTH - 340, 20, 315, 86)
-        pygame.draw.rect(self.screen, (10, 12, 22), score_panel, border_radius=6)
-        pygame.draw.rect(self.screen, COLOR_CYAN, score_panel, 2, border_radius=6)
+        # Marcador Score Superior Derecho (Ampliado y claro)
+        score_panel = pygame.Rect(SCREEN_WIDTH - 420, 20, 395, 116)
+        pygame.draw.rect(self.screen, (10, 12, 22), score_panel, border_radius=8)
+        pygame.draw.rect(self.screen, COLOR_CYAN, score_panel, 2, border_radius=8)
         
-        score_surf = self.render_fitted_text(self.font_mid, f"SCORE {self.score:06d}", COLOR_GOLD, max_width=285)
-        self.screen.blit(score_surf, (score_panel.x + 15, score_panel.y + 6))
+        score_surf = self.render_fitted_text(self.font_mid, f"SCORE {self.score:06d}", COLOR_GOLD, max_width=270)
+        self.screen.blit(score_surf, (score_panel.x + 16, score_panel.y + 8))
 
         # Indicador de FPS suave colocado en la esquina superior del panel de puntuación
         cur_fps = int(self.clock.get_fps())
         fps_str = f"FPS {cur_fps if cur_fps > 0 else FPS}"
-        fps_surf = self.render_fitted_text(self.font_small, fps_str, COLOR_GREEN if cur_fps >= 55 or cur_fps == 0 else COLOR_GOLD, max_width=80)
-        self.screen.blit(fps_surf, (score_panel.right - fps_surf.get_width() - 15, score_panel.y + 10))
+        fps_surf = self.render_fitted_text(self.font_small, fps_str, COLOR_GREEN if cur_fps >= 55 or cur_fps == 0 else COLOR_GOLD, max_width=90)
+        self.screen.blit(fps_surf, (score_panel.right - fps_surf.get_width() - 16, score_panel.y + 12))
 
         stage_names = ["ROOFTOPS", "BIO-LAB", "COMPLEX", "RUINS", "FORTRESS", "WARZONE", "STRATOSPHERE", "BOSS CORE"]
         stg_idx = min(len(stage_names) - 1, max(0, self.current_level - 1))
-        stage_surf = self.render_fitted_text(self.font_small, f"STAGE {self.current_level} - {stage_names[stg_idx]}", COLOR_CYAN, max_width=285)
-        self.screen.blit(stage_surf, (score_panel.x + 15, score_panel.y + 34))
+        stage_surf = self.render_fitted_text(self.font_small, f"STAGE {self.current_level} - {stage_names[stg_idx]}", COLOR_CYAN, max_width=360)
+        self.screen.blit(stage_surf, (score_panel.x + 16, score_panel.y + 45))
 
         diff_cfg = self.get_difficulty_config()
         diff_name_display = diff_cfg['name']
@@ -2053,8 +2053,8 @@ class CyberDroneGame:
             diff_name_display = "REALLY IMPOSSIBLE"
         elif diff_name_display == "DARK SOULS DIFFICULTY":
             diff_name_display = "DARK SOULS"
-        diff_surf = self.render_fitted_text(self.font_small, f"DIF: {diff_name_display}", diff_cfg["color"], max_width=170)
-        self.screen.blit(diff_surf, (score_panel.x + 15, score_panel.y + 58))
+        diff_surf = self.render_fitted_text(self.font_small, f"DIF: {diff_name_display}", diff_cfg["color"], max_width=360)
+        self.screen.blit(diff_surf, (score_panel.x + 16, score_panel.y + 78))
 
         if self.player.level_up_timer > 0:
             lvl_banner = self.assets.get_image("ui_level_up.png", (280, 80))
@@ -2103,37 +2103,37 @@ class CyberDroneGame:
         self.screen.blit(overlay, (0, 0))
 
         opts = self.get_pause_options()
-        panel_w, panel_h = 760, 430
+        panel_w, panel_h = 860, 480
         px = (SCREEN_WIDTH - panel_w) // 2
         py = (SCREEN_HEIGHT - panel_h) // 2
 
         diff_cfg = self.get_difficulty_config()
 
-        pygame.draw.rect(self.screen, (12, 16, 28), (px, py, panel_w, panel_h), border_radius=10)
-        pygame.draw.rect(self.screen, COLOR_PURPLE, (px, py, panel_w, panel_h), 4, border_radius=10)
-        pygame.draw.rect(self.screen, diff_cfg["color"], (px + 6, py + 6, panel_w - 12, panel_h - 12), 2, border_radius=8)
+        pygame.draw.rect(self.screen, (12, 16, 28), (px, py, panel_w, panel_h), border_radius=12)
+        pygame.draw.rect(self.screen, COLOR_PURPLE, (px, py, panel_w, panel_h), 4, border_radius=12)
+        pygame.draw.rect(self.screen, diff_cfg["color"], (px + 6, py + 6, panel_w - 12, panel_h - 12), 2, border_radius=10)
 
         p_title = self.font_large.render("= PAUSE =", True, COLOR_GOLD)
-        self.screen.blit(p_title, ((SCREEN_WIDTH - p_title.get_width()) // 2, py + 22))
+        self.screen.blit(p_title, ((SCREEN_WIDTH - p_title.get_width()) // 2, py + 24))
 
         for idx, opt_text in enumerate(opts):
-            opt_y = py + 84 + idx * 52
+            opt_y = py + 95 + idx * 58
             is_sel = (idx == self.pause_selected)
 
             if is_sel:
-                sel_rect = pygame.Rect(px + 25, opt_y - 6, panel_w - 50, 40)
-                pygame.draw.rect(self.screen, (45, 20, 75), sel_rect, border_radius=6)
-                pygame.draw.rect(self.screen, COLOR_CYAN, sel_rect, 2, border_radius=6)
+                sel_rect = pygame.Rect(px + 28, opt_y - 6, panel_w - 56, 46)
+                pygame.draw.rect(self.screen, (45, 20, 75), sel_rect, border_radius=8)
+                pygame.draw.rect(self.screen, COLOR_CYAN, sel_rect, 2, border_radius=8)
                 col = diff_cfg["color"] if idx == 1 else COLOR_CYAN
-                txt_surf = self.render_fitted_text(self.font_mid, f">> {opt_text}", col, max_width=panel_w - 90)
+                txt_surf = self.render_fitted_text(self.font_mid, f">> {opt_text}", col, max_width=panel_w - 80)
             else:
                 col = diff_cfg["color"] if idx == 1 else COLOR_WHITE
-                txt_surf = self.render_fitted_text(self.font_mid, f"   {opt_text}", col, max_width=panel_w - 90)
+                txt_surf = self.render_fitted_text(self.font_mid, f"   {opt_text}", col, max_width=panel_w - 80)
 
-            self.screen.blit(txt_surf, (px + 40, opt_y))
+            self.screen.blit(txt_surf, (px + 45, opt_y))
 
         hint = self.render_fitted_text(self.font_small, "[UP/DOWN] SELECT  |  [LEFT/RIGHT] DIFFICULTY  |  [ENTER] ACCEPT", (170, 180, 210), max_width=panel_w - 40)
-        self.screen.blit(hint, ((SCREEN_WIDTH - hint.get_width()) // 2, py + panel_h - 34))
+        self.screen.blit(hint, ((SCREEN_WIDTH - hint.get_width()) // 2, py + panel_h - 38))
 
     def draw_welcome(self):
         self.draw_background()
@@ -2176,11 +2176,11 @@ class CyberDroneGame:
         drone_spr = self.assets.get_image("p_idle_0.png", (72, 90))
         self.screen.blit(drone_spr, drone_spr.get_rect(center=(SCREEN_WIDTH // 2, int(drone_y))))
 
-        # Caja de Instrucciones Arcade
-        ctrl_box = pygame.Rect(SCREEN_WIDTH // 2 - 390, 225, 780, 200)
-        pygame.draw.rect(self.screen, (10, 15, 28), ctrl_box, border_radius=8)
-        pygame.draw.rect(self.screen, COLOR_PURPLE, ctrl_box, 2, border_radius=8)
-        pygame.draw.rect(self.screen, COLOR_CYAN, (ctrl_box.x + 4, ctrl_box.y + 4, ctrl_box.w - 8, ctrl_box.h - 8), 1, border_radius=6)
+        # Caja de Instrucciones Arcade (Más grande, amplia y legible)
+        ctrl_box = pygame.Rect(SCREEN_WIDTH // 2 - 520, 210, 1040, 260)
+        pygame.draw.rect(self.screen, (10, 15, 28), ctrl_box, border_radius=10)
+        pygame.draw.rect(self.screen, COLOR_PURPLE, ctrl_box, 3, border_radius=10)
+        pygame.draw.rect(self.screen, COLOR_CYAN, (ctrl_box.x + 4, ctrl_box.y + 4, ctrl_box.w - 8, ctrl_box.h - 8), 1, border_radius=8)
 
         lines = [
             ("== FLIGHT & AERIAL COMBAT SYSTEMS ==", COLOR_GOLD),
@@ -2193,40 +2193,40 @@ class CyberDroneGame:
         ]
         for idx, (txt, col) in enumerate(lines):
             s = self.render_fitted_text(self.font_small, txt, col, max_width=ctrl_box.w - 44)
-            self.screen.blit(s, (ctrl_box.x + 22, ctrl_box.y + 10 + idx * 26))
+            self.screen.blit(s, (ctrl_box.x + 24, ctrl_box.y + 12 + idx * 34))
 
-        # --- COMPACT INTERACTIVE DIFFICULTY SELECTOR ---
+        # --- COMPACT INTERACTIVE DIFFICULTY SELECTOR (Más grande y legible) ---
         diff_cfg = self.get_difficulty_config()
-        diff_box_y = int(SCREEN_HEIGHT * 0.65)
-        diff_box = pygame.Rect(SCREEN_WIDTH // 2 - 390, diff_box_y, 780, 136)
-        pygame.draw.rect(self.screen, (12, 14, 26), diff_box, border_radius=8)
-        pygame.draw.rect(self.screen, diff_cfg["color"], diff_box, 2, border_radius=8)
+        diff_box_y = int(SCREEN_HEIGHT * 0.60)
+        diff_box = pygame.Rect(SCREEN_WIDTH // 2 - 520, diff_box_y, 1040, 180)
+        pygame.draw.rect(self.screen, (12, 14, 26), diff_box, border_radius=10)
+        pygame.draw.rect(self.screen, diff_cfg["color"], diff_box, 3, border_radius=10)
 
         # Arrow buttons for mouse selection
-        left_btn = pygame.Rect(diff_box.x + 14, diff_box.y + 10, 44, 32)
-        right_btn = pygame.Rect(diff_box.right - 58, diff_box.y + 10, 44, 32)
-        pygame.draw.rect(self.screen, (30, 20, 50), left_btn, border_radius=6)
-        pygame.draw.rect(self.screen, diff_cfg["color"], left_btn, 2, border_radius=6)
-        pygame.draw.rect(self.screen, (30, 20, 50), right_btn, border_radius=6)
-        pygame.draw.rect(self.screen, diff_cfg["color"], right_btn, 2, border_radius=6)
+        left_btn = pygame.Rect(diff_box.x + 16, diff_box.y + 12, 54, 38)
+        right_btn = pygame.Rect(diff_box.right - 70, diff_box.y + 12, 54, 38)
+        pygame.draw.rect(self.screen, (30, 20, 50), left_btn, border_radius=8)
+        pygame.draw.rect(self.screen, diff_cfg["color"], left_btn, 2, border_radius=8)
+        pygame.draw.rect(self.screen, (30, 20, 50), right_btn, border_radius=8)
+        pygame.draw.rect(self.screen, diff_cfg["color"], right_btn, 2, border_radius=8)
 
         # Sharp vector arrows
         pts_left = [
-            (left_btn.centerx + 6, left_btn.centery - 8),
-            (left_btn.centerx - 8, left_btn.centery),
-            (left_btn.centerx + 6, left_btn.centery + 8)
+            (left_btn.centerx + 8, left_btn.centery - 10),
+            (left_btn.centerx - 10, left_btn.centery),
+            (left_btn.centerx + 8, left_btn.centery + 10)
         ]
         pygame.draw.polygon(self.screen, diff_cfg["color"], pts_left)
 
         pts_right = [
-            (right_btn.centerx - 6, right_btn.centery - 8),
-            (right_btn.centerx + 8, right_btn.centery),
-            (right_btn.centerx - 6, right_btn.centery + 8)
+            (right_btn.centerx - 8, right_btn.centery - 10),
+            (right_btn.centerx + 10, right_btn.centery),
+            (right_btn.centerx - 8, right_btn.centery + 10)
         ]
         pygame.draw.polygon(self.screen, diff_cfg["color"], pts_right)
 
-        diff_title = self.render_fitted_text(self.font_mid, f"[ {diff_cfg['name']} ]", diff_cfg["color"], max_width=diff_box.w - 140)
-        self.screen.blit(diff_title, diff_title.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 26)))
+        diff_title = self.render_fitted_text(self.font_mid, f"[ {diff_cfg['name']} ]", diff_cfg["color"], max_width=diff_box.w - 180)
+        self.screen.blit(diff_title, diff_title.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 32)))
 
         # Difficulty Multipliers Line
         cad_txt = f"x{(1.0/diff_cfg['shoot_cooldown_mult']):.2f}"
@@ -2237,23 +2237,23 @@ class CyberDroneGame:
             f"HP: x{diff_cfg['hp_mult']:.2f}  |  "
             f"DMG: x{diff_cfg['damage_mult']:.2f}"
         )
-        stats_surf = self.render_fitted_text(self.font_small, stats_line, COLOR_GOLD, max_width=diff_box.w - 30)
-        self.screen.blit(stats_surf, stats_surf.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 58)))
+        stats_surf = self.render_fitted_text(self.font_small, stats_line, COLOR_GOLD, max_width=diff_box.w - 40)
+        self.screen.blit(stats_surf, stats_surf.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 75)))
 
         # Description Line
-        desc_surf = self.render_fitted_text(self.font_small, diff_cfg["description"], COLOR_WHITE, max_width=diff_box.w - 30)
-        self.screen.blit(desc_surf, desc_surf.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 83)))
+        desc_surf = self.render_fitted_text(self.font_small, diff_cfg["description"], COLOR_WHITE, max_width=diff_box.w - 40)
+        self.screen.blit(desc_surf, desc_surf.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 110)))
 
-        hint_nav = self.render_fitted_text(self.font_small, f"[<-]/[->] or [A]/[D] DIFFICULTY   |   SCORE: x{diff_cfg['score_mult']:.2f}   |   [F11] FULLSCREEN", diff_cfg["color"], max_width=diff_box.w - 30)
-        self.screen.blit(hint_nav, hint_nav.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 110)))
+        hint_nav = self.render_fitted_text(self.font_small, f"[<-]/[->] or [A]/[D] DIFFICULTY   |   SCORE: x{diff_cfg['score_mult']:.2f}   |   [F11] FULLSCREEN", diff_cfg["color"], max_width=diff_box.w - 40)
+        self.screen.blit(hint_nav, hint_nav.get_rect(center=(SCREEN_WIDTH // 2, diff_box.y + 145)))
 
-        # Mission Launch Prompt
+        # Mission Launch Prompt (Botón grande)
         if int(t_ticks * 2.5) % 2 == 0:
             prompt_y = diff_box.bottom + 20
-            prompt_btn = pygame.Rect(SCREEN_WIDTH // 2 - 270, prompt_y, 540, 48)
-            pygame.draw.rect(self.screen, (10, 16, 28), prompt_btn, border_radius=8)
-            pygame.draw.rect(self.screen, COLOR_GOLD, prompt_btn, 2, border_radius=8)
-            prompt_txt = self.render_fitted_text(self.font_mid, f">> LAUNCH MISSION [{diff_cfg['name']}] <<", COLOR_GOLD, max_width=prompt_btn.w - 30)
+            prompt_btn = pygame.Rect(SCREEN_WIDTH // 2 - 340, prompt_y, 680, 58)
+            pygame.draw.rect(self.screen, (10, 16, 28), prompt_btn, border_radius=10)
+            pygame.draw.rect(self.screen, COLOR_GOLD, prompt_btn, 3, border_radius=10)
+            prompt_txt = self.render_fitted_text(self.font_mid, f">> LAUNCH MISSION [{diff_cfg['name']}] <<", COLOR_GOLD, max_width=prompt_btn.w - 40)
             self.screen.blit(prompt_txt, prompt_txt.get_rect(center=prompt_btn.center))
 
     def draw_level_clear(self):
