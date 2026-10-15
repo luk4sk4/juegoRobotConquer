@@ -133,29 +133,128 @@ class AudioManager:
         self.music_playing = False
         self.music_paused = False
         try:
-            pygame.mixer.init(44100, -16, 2, 512)
+            if not pygame.mixer.get_init():
+                pygame.mixer.init(44100, -16, 2, 2048)
             self._create_procedural_sounds()
+            self._init_custom_sounds()
             self._init_music()
             self.enabled = True
         except Exception as e:
             print("Audio no disponible:", e)
             self.enabled = False
 
-    def _init_music(self):
-        music_file = "Space Retro (1).mp3"
-        if not os.path.exists(music_file):
-            alt_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), music_file)
-            if os.path.exists(alt_path):
-                music_file = alt_path
+    def _init_custom_sounds(self):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
 
-        if os.path.exists(music_file):
-            try:
-                pygame.mixer.music.load(music_file)
-                pygame.mixer.music.set_volume(0.40)
-                self.music_loaded = True
-            except Exception as e:
-                print("Error cargando música:", e)
-                self.music_loaded = False
+        # 1. Cargar sonido de Game Over
+        game_over_candidates = [
+            "game_over.wav",
+            "freesound_community-game-over-arcade-6435.wav",
+            "game_over.mp3",
+            "freesound_community-game-over-arcade-6435.mp3",
+        ]
+        for name in game_over_candidates:
+            for candidate in (name, os.path.join(base_dir, name)):
+                if os.path.exists(candidate):
+                    try:
+                        snd = pygame.mixer.Sound(candidate)
+                        snd.set_volume(0.90)
+                        self.sounds['game_over'] = snd
+                        print(f"Efecto Game Over cargado: {candidate}")
+                        break
+                    except Exception as e:
+                        print(f"No se pudo cargar {candidate}: {e}")
+            if 'game_over' in self.sounds:
+                break
+
+        # Búsqueda dinámica adicional para Game Over
+        if 'game_over' not in self.sounds:
+            for d in (".", base_dir):
+                if not os.path.exists(d): continue
+                try:
+                    for f in os.listdir(d):
+                        lf = f.lower()
+                        if "game" in lf and "over" in lf and (lf.endswith(".wav") or lf.endswith(".mp3") or lf.endswith(".ogg")):
+                            snd = pygame.mixer.Sound(os.path.join(d, f))
+                            snd.set_volume(0.90)
+                            self.sounds['game_over'] = snd
+                            print(f"Efecto Game Over cargado dinámicamente: {f}")
+                            break
+                except Exception:
+                    pass
+                if 'game_over' in self.sounds:
+                    break
+
+        # 2. Cargar sonido de Level Up / Victoria
+        level_up_candidates = [
+            "level_up.wav",
+            "vadim_makes_sound-retro-arcade-level-up-552982.wav",
+            "level_up.mp3",
+            "vadim_makes_sound-retro-arcade-level-up-552982.mp3",
+        ]
+        for name in level_up_candidates:
+            for candidate in (name, os.path.join(base_dir, name)):
+                if os.path.exists(candidate):
+                    try:
+                        snd = pygame.mixer.Sound(candidate)
+                        snd.set_volume(0.90)
+                        self.sounds['level_up'] = snd
+                        self.sounds['levelup'] = snd
+                        print(f"Efecto Level Up cargado: {candidate}")
+                        break
+                    except Exception as e:
+                        print(f"No se pudo cargar {candidate}: {e}")
+            if 'level_up' in self.sounds:
+                break
+
+        # Búsqueda dinámica adicional para Level Up
+        if 'level_up' not in self.sounds:
+            for d in (".", base_dir):
+                if not os.path.exists(d): continue
+                try:
+                    for f in os.listdir(d):
+                        lf = f.lower()
+                        if "level" in lf and "up" in lf and (lf.endswith(".wav") or lf.endswith(".mp3") or lf.endswith(".ogg")):
+                            snd = pygame.mixer.Sound(os.path.join(d, f))
+                            snd.set_volume(0.90)
+                            self.sounds['level_up'] = snd
+                            self.sounds['levelup'] = snd
+                            print(f"Efecto Level Up cargado dinámicamente: {f}")
+                            break
+                except Exception:
+                    pass
+                if 'level_up' in self.sounds:
+                    break
+
+    def _init_music(self):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        # Priorizar .wav para máxima fidelidad y calidad de sonido sin compresión
+        music_candidates = [
+            "musica_juego.wav",
+            "musica_juego.mp3",
+            "musica_juego.ogg",
+        ]
+
+        found_path = None
+        for name in music_candidates:
+            # Primero en directorio actual de trabajo, luego relativo al script
+            for candidate in (name, os.path.join(base_dir, name)):
+                if os.path.exists(candidate):
+                    try:
+                        pygame.mixer.music.load(candidate)
+                        pygame.mixer.music.set_volume(0.60)
+                        self.music_loaded = True
+                        found_path = candidate
+                        break
+                    except Exception as e:
+                        print(f"No se pudo cargar {candidate}: {e}")
+            if self.music_loaded:
+                break
+
+        if self.music_loaded:
+            print(f"Música de fondo cargada con éxito: {found_path}")
+        else:
+            print("Aviso: No se pudo cargar ningún archivo de música compatible.")
 
     def _create_procedural_sounds(self):
         sr = 44100
@@ -253,8 +352,16 @@ class AudioManager:
         n = int(sr * dur)
         t = np.linspace(0, dur, n, False)
         freq = np.linspace(220, 880, n)
-        wave = np.sin(2 * np.pi * freq * t) * np.linspace(0.08, 0.28, n)
         self.sounds['charging'] = self._to_sound(wave)
+
+        # 12. Fallback procedural Game Over
+        dur = 0.65
+        n = int(sr * dur)
+        t = np.linspace(0, dur, n, False)
+        freq = np.linspace(340, 70, n)
+        wave = np.sin(2 * np.pi * freq * t) * (1 - t/dur)
+        self.sounds['game_over'] = self._to_sound(wave * 0.35)
+        self.sounds['level_up'] = self.sounds.get('levelup', self.sounds['game_over'])
 
     def _to_sound(self, arr):
         sample = (arr * 32767).astype(np.int16)
@@ -270,12 +377,16 @@ class AudioManager:
             self.sounds[name].stop()
 
     def play_music(self, loops=-1):
-        if not self.enabled or not self.music_loaded:
+        if not self.enabled:
+            return
+        if not self.music_loaded:
+            self._init_music()
+        if not self.music_loaded:
             return
         try:
             if self.music_paused:
                 self.unpause_music()
-            elif not self.music_playing:
+            elif not pygame.mixer.music.get_busy() or not self.music_playing:
                 pygame.mixer.music.play(loops)
                 self.music_playing = True
                 self.music_paused = False
