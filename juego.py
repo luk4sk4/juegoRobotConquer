@@ -129,13 +129,33 @@ DIFFICULTY_SETTINGS = {
 class AudioManager:
     def __init__(self):
         self.sounds = {}
+        self.music_loaded = False
+        self.music_playing = False
+        self.music_paused = False
         try:
             pygame.mixer.init(44100, -16, 2, 512)
             self._create_procedural_sounds()
+            self._init_music()
             self.enabled = True
         except Exception as e:
             print("Audio no disponible:", e)
             self.enabled = False
+
+    def _init_music(self):
+        music_file = "Space Retro (1).mp3"
+        if not os.path.exists(music_file):
+            alt_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), music_file)
+            if os.path.exists(alt_path):
+                music_file = alt_path
+
+        if os.path.exists(music_file):
+            try:
+                pygame.mixer.music.load(music_file)
+                pygame.mixer.music.set_volume(0.40)
+                self.music_loaded = True
+            except Exception as e:
+                print("Error cargando música:", e)
+                self.music_loaded = False
 
     def _create_procedural_sounds(self):
         sr = 44100
@@ -248,6 +268,44 @@ class AudioManager:
     def stop(self, name):
         if self.enabled and name in self.sounds:
             self.sounds[name].stop()
+
+    def play_music(self, loops=-1):
+        if not self.enabled or not self.music_loaded:
+            return
+        try:
+            if self.music_paused:
+                self.unpause_music()
+            elif not self.music_playing:
+                pygame.mixer.music.play(loops)
+                self.music_playing = True
+                self.music_paused = False
+        except Exception as e:
+            print("Error reproduciendo música:", e)
+
+    def pause_music(self):
+        if self.enabled and self.music_loaded and self.music_playing and not self.music_paused:
+            try:
+                pygame.mixer.music.pause()
+                self.music_paused = True
+            except Exception as e:
+                print("Error pausando música:", e)
+
+    def unpause_music(self):
+        if self.enabled and self.music_loaded and self.music_paused:
+            try:
+                pygame.mixer.music.unpause()
+                self.music_paused = False
+            except Exception as e:
+                print("Error reanudando música:", e)
+
+    def stop_music(self):
+        if self.enabled and self.music_loaded:
+            try:
+                pygame.mixer.music.stop()
+                self.music_playing = False
+                self.music_paused = False
+            except Exception as e:
+                print("Error deteniendo música:", e)
 
 # --- CARGADOR DE ASSETS Y OPTIMIZADOR DE CONTRASTE ---
 class AssetLoader:
@@ -1323,6 +1381,7 @@ class CyberDroneGame:
         self.font_small = pygame.font.SysFont("Consolas", 16, bold=True)
 
         self.audio = AudioManager()
+        self.audio.play_music()
         self.assets = AssetLoader()
         self.particles = ParticleManager()
         self.scanlines = self._create_scanlines()
@@ -1408,6 +1467,7 @@ class CyberDroneGame:
         self.level_timer = 0
         self.boss = None
         self.state = "PLAYING"
+        self.audio.play_music()
 
     def advance_level(self):
         self.current_level += 1
@@ -1441,6 +1501,7 @@ class CyberDroneGame:
                             self.state = "PAUSED"
                             self.pause_selected = 0
                             self.audio.play('menu_select')
+                            self.audio.pause_music()
 
                     elif self.state == "PAUSED":
                         opts = self.get_pause_options()
@@ -1461,6 +1522,7 @@ class CyberDroneGame:
                             self._handle_pause_action()
                         elif event.key in (pygame.K_p, pygame.K_ESCAPE):
                             self.state = "PLAYING"
+                            self.audio.unpause_music()
 
                     elif self.state == "WELCOME":
                         if event.key == pygame.K_ESCAPE:
@@ -1482,6 +1544,7 @@ class CyberDroneGame:
                             self.reset_game()
                         elif event.key == pygame.K_ESCAPE:
                             self.state = "WELCOME"
+                            self.audio.play_music()
 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.state == "WELCOME":
@@ -1516,6 +1579,15 @@ class CyberDroneGame:
                                 self.audio.play('menu_select')
                                 self._handle_pause_action()
 
+                    elif self.state == "PLAYING":
+                        mx, my = event.pos
+                        pause_btn = pygame.Rect(30, 25 + 92, 95, 22)
+                        if pause_btn.collidepoint(mx, my):
+                            self.state = "PAUSED"
+                            self.pause_selected = 0
+                            self.audio.play('menu_select')
+                            self.audio.pause_music()
+
             if self.state == "WELCOME":
                 self.update_welcome()
                 self.draw_welcome()
@@ -1547,6 +1619,7 @@ class CyberDroneGame:
     def _handle_pause_action(self):
         if self.pause_selected == 0:
             self.state = "PLAYING"
+            self.audio.unpause_music()
         elif self.pause_selected == 1:
             # Alternar dificultad desde el menú de pausa
             self.change_difficulty(1)
@@ -1557,9 +1630,12 @@ class CyberDroneGame:
             self.player.hp = self.player.max_hp
             self.player.energy = self.player.max_energy
             self.state = "PLAYING"
+            self.audio.unpause_music()
         elif self.pause_selected == 3:
             self.state = "WELCOME"
+            self.audio.unpause_music()
         elif self.pause_selected == 4:
+            self.audio.stop_music()
             pygame.quit()
             sys.exit()
 
